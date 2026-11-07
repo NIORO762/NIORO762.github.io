@@ -1,0 +1,118 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="claude:viewport-fit-sides" content="cover">
+<title>Dallas Avenue Élégance - Blog</title>
+<style>
+:root{
+  color-scheme:light;
+  --bg:#fbf7f4; --fg:#2a1b20; --muted:#7b6469; --card:#ffffff; --line:#eadfd9;
+  --accent:#7a1f3d; --gold:#b8923e; --accent-fg:#ffffff;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    color-scheme:dark;
+    --bg:#1b1114; --fg:#f6ecef; --muted:#b9a3a8; --card:#261a1e; --line:#3d2a30;
+    --accent:#c9587f; --gold:#d8b165; --accent-fg:#1b1114;
+  }
+}
+:root[data-theme="dark"]{
+  color-scheme:dark;
+  --bg:#1b1114; --fg:#f6ecef; --muted:#b9a3a8; --card:#261a1e; --line:#3d2a30;
+  --accent:#c9587f; --gold:#d8b165; --accent-fg:#1b1114;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--fg);font:16px/1.65 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-bottom:40px}
+img{max-width:100%;display:block}
+a{color:var(--accent)}
+header{padding-block:22px 10px;text-align:center}
+header h1{margin:0;font-family:Georgia,"Times New Roman",serif;font-size:22px;letter-spacing:.06em;color:var(--accent)}
+header p{margin:4px 0 0;color:var(--muted);font-size:13px}
+nav.top{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin:14px 0 6px}
+nav.top a{padding:7px 14px;border-radius:999px;border:1px solid var(--line);text-decoration:none;font-size:14px;color:var(--fg);background:var(--card)}
+nav.top a.on{background:var(--accent);color:var(--accent-fg);border-color:var(--accent)}
+article{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:20px 18px;margin:22px 0;min-width:0}
+article h2{margin:0 0 4px;font-family:Georgia,serif;font-size:21px;line-height:1.25;color:var(--accent)}
+article .date{font-size:13px;color:var(--gold);margin-bottom:12px}
+article .texte p{margin:0 0 12px;white-space:pre-line}
+.photos{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:8px;margin:14px 0}
+.photos img{width:100%;aspect-ratio:1/1;object-fit:cover;border-radius:10px;cursor:zoom-in;background:#fff}
+.videos{display:grid;gap:14px;margin-top:14px}
+.video{position:relative;aspect-ratio:16/9;border-radius:12px;overflow:hidden;background:#000}
+.video iframe{position:absolute;inset:0;width:100%;height:100%;border:0}
+.lien{display:inline-block;padding:9px 14px;border-radius:10px;border:1px solid var(--accent);color:var(--accent);text-decoration:none;word-break:break-all}
+.empty{padding:50px 0;text-align:center;color:var(--muted)}
+#zoom{position:fixed;inset:0;background:rgba(0,0,0,.85);display:none;align-items:center;justify-content:center;padding:16px;z-index:60}
+#zoom.open{display:flex}
+#zoom img{max-width:100%;max-height:100%;object-fit:contain;border-radius:8px}
+footer{margin-top:30px;text-align:center;color:var(--muted);font-size:12px}
+</style>
+</head>
+<body>
+<header>
+  <h1>DALLAS AVENUE</h1>
+  <p>ÉLÉGANCE · Le blog</p>
+  <nav class="top">
+    <a href="soins.html">Soins</a>
+    <a class="on" href="blog.html">Blog</a>
+    <a href="index.html">Boutique</a>
+  </nav>
+</header>
+
+<main id="app"><div class="empty">Chargement des articles…</div></main>
+
+<div id="zoom" onclick="this.classList.remove('open')"><img id="zoomImg" alt=""></div>
+
+<footer>Dallas Avenue Élégance · Koulouba, Nioro du Sahel · 71 74 74 15</footer>
+
+<script>
+function esc(s){ return String(s==null?'':s).replace(/[&<>"']/g, function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]; }); }
+
+function dateFr(iso){
+  if(!iso) return '';
+  var d = new Date(iso + 'T12:00:00');
+  if(isNaN(d)) return esc(iso);
+  return d.toLocaleDateString('fr-FR', { day:'numeric', month:'long', year:'numeric' });
+}
+
+/* Transforme un lien YouTube en lecteur intégré ; les autres liens restent cliquables. */
+function videoHtml(url){
+  var u = String(url||'').trim();
+  var m = u.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/shorts\/)([A-Za-z0-9_-]{6,})/);
+  if(m){
+    return '<div class="video"><iframe src="https://www.youtube.com/embed/'+esc(m[1])+'" title="Vidéo" loading="lazy" allowfullscreen></iframe></div>';
+  }
+  if(!/^https?:\/\//i.test(u)) return '';
+  return '<a class="lien" href="'+esc(u)+'" target="_blank" rel="noopener">▶ Voir la vidéo</a>';
+}
+
+function rendre(articles){
+  var app = document.getElementById('app');
+  if(!articles || !articles.length){ app.innerHTML = '<div class="empty">Les articles seront bientôt publiés ici.</div>'; return; }
+  app.innerHTML = articles.slice().sort(function(a,b){ return String(b.date||'').localeCompare(String(a.date||'')); }).map(function(a){
+    var paras = String(a.texte||'').split(/\n\s*\n/).map(function(p){ return '<p>'+esc(p)+'</p>'; }).join('');
+    var photos = (a.photos||[]).length
+      ? '<div class="photos">' + a.photos.map(function(p){ return '<img src="'+esc(p)+'" alt="" loading="lazy" onclick="zoom(this.src)">'; }).join('') + '</div>'
+      : '';
+    var videos = (a.videos||[]).length
+      ? '<div class="videos">' + a.videos.map(videoHtml).join('') + '</div>'
+      : '';
+    return '<article><h2>'+esc(a.titre)+'</h2><div class="date">'+dateFr(a.date)+'</div>' +
+      photos + '<div class="texte">'+paras+'</div>' + videos + '</article>';
+  }).join('');
+}
+
+function zoom(src){
+  document.getElementById('zoomImg').src = src;
+  document.getElementById('zoom').classList.add('open');
+}
+
+fetch('boutique.json?t=' + Date.now()).then(function(r){ if(!r.ok) throw 0; return r.json(); })
+  .then(function(d){ rendre(d.blog || []); })
+  .catch(function(){ document.getElementById('app').innerHTML = '<div class="empty">Les articles ne s\'affichent pas pour le moment. Réessayez dans un instant.</div>'; });
+</script>
+</body>
+</html>
