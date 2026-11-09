@@ -68,7 +68,7 @@ input,select,textarea{font:inherit;padding:10px 11px;border-radius:10px;border:1
 footer{margin-top:30px;text-align:center;color:var(--muted);font-size:12px}
 @media (max-width:420px){ .row2{grid-template-columns:1fr} }
 </style>
-</head>
+<link rel="manifest" href="manifest.json"><link rel="icon" type="image/png" sizes="192x192" href="icon-192.png"><link rel="apple-touch-icon" href="icon-192.png"></head>
 <body>
 <header>
   <h1>DALLAS AVENUE</h1>
@@ -107,6 +107,7 @@ footer{margin-top:30px;text-align:center;color:var(--muted);font-size:12px}
     <label>Message (facultatif)
       <textarea id="rdvMsg" rows="2"></textarea>
     </label>
+    <input type="text" name="site_web" id="rdvPiege" tabindex="-1" autocomplete="off" aria-hidden="true" style="position:absolute;left:-9999px;width:1px;height:1px;opacity:0;">
     <button type="submit" id="rdvBtn">Envoyer la demande</button>
     <p class="msg" id="rdvMsgOut" role="status"></p>
   </form>
@@ -205,7 +206,12 @@ document.getElementById('rdvForm').addEventListener('submit', async function(ev)
   var nom = document.getElementById('rdvNom').value.trim();
   var tel = document.getElementById('rdvTel').value.trim();
   var msg = document.getElementById('rdvMsg').value.trim();
+  if(document.getElementById('rdvPiege').value){ document.getElementById('rdvForm').reset(); out.textContent = 'Merci ! Votre demande est enregistrée.'; return; }
   if(!soinId || !date || !heure || !nom || !tel){ out.textContent = 'Merci de remplir tous les champs obligatoires.'; return; }
+  if(nom.length > 100 || tel.length > 20 || msg.length > 1000){ out.textContent = 'Un des champs est trop long. Merci de le raccourcir.'; return; }
+  var dernier = 0; try{ dernier = parseInt(localStorage.getItem('rdv_dernier')||'0',10); }catch(e){}
+  if(Date.now() - dernier < 60000){ out.textContent = 'Votre demande précédente vient d\'être envoyée. Patientez une minute avant d\'en envoyer une autre.'; return; }
+  try{ localStorage.setItem('rdv_dernier', String(Date.now())); }catch(e){}
   var soin = byId(soinId);
   var r = { nom:nom, telephone:tel, soin: soin ? soin.nom : '', date_souhaitee:date, heure:heure, message:msg, statut:'nouveau' };
   var btn = document.getElementById('rdvBtn'); btn.disabled = true;
